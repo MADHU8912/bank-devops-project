@@ -1,0 +1,85 @@
+pipeline {
+    agent any
+
+    environment {
+        BACKEND_IMAGE = 'nikhilabba12/bank-backend:latest'
+        FRONTEND_IMAGE = 'nikhilabba12/bank-frontend:latest'
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+
+        stage('Check Files') {
+            steps {
+                bat 'dir'
+                bat 'dir backend'
+                bat 'dir frontend'
+            }
+        }
+
+        stage('Build Backend Image') {
+            steps {
+                bat 'docker build -t %BACKEND_IMAGE% backend'
+            }
+        }
+
+        stage('Build Frontend Image') {
+            steps {
+                bat 'docker build -t %FRONTEND_IMAGE% frontend'
+            }
+        }
+
+        stage('Docker Login') {
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                    bat 'echo %DOCKER_PASS% | docker login -u %DOCKER_USER% --password-stdin'
+                }
+            }
+        }
+
+        stage('Push Backend Image') {
+            steps {
+                bat 'docker push %BACKEND_IMAGE%'
+            }
+        }
+
+        stage('Push Frontend Image') {
+            steps {
+                bat 'docker push %FRONTEND_IMAGE%'
+            }
+        }
+
+        stage('Pull Images Test') {
+            steps {
+                bat 'docker pull %BACKEND_IMAGE%'
+                bat 'docker pull %FRONTEND_IMAGE%'
+            }
+        }
+
+        stage('Build Report') {
+            steps {
+                bat '''
+                echo Build Successful > build-report.txt
+                echo Backend Image: %BACKEND_IMAGE% >> build-report.txt
+                echo Frontend Image: %FRONTEND_IMAGE% >> build-report.txt
+                '''
+            }
+        }
+    }
+
+    post {
+        always {
+            archiveArtifacts artifacts: 'build-report.txt', fingerprint: true
+        }
+        success {
+            echo 'Pipeline completed successfully'
+        }
+        failure {
+            echo 'Pipeline failed'
+        }
+    }
+}
