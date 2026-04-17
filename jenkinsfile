@@ -7,7 +7,6 @@ pipeline {
     }
 
     stages {
-
         stage('Checkout') {
             steps {
                 checkout scm
@@ -65,27 +64,6 @@ pipeline {
             }
         }
 
-        stage('Trigger Render Backend Deploy') {
-            steps {
-                bat 'powershell -Command "Invoke-WebRequest -Uri ''YOUR_BACKEND_RENDER_DEPLOY_HOOK_URL'' -Method POST"'
-            }
-        }
-
-        stage('Trigger Render Frontend Deploy') {
-            steps {
-                bat 'powershell -Command "Invoke-WebRequest -Uri ''YOUR_FRONTEND_RENDER_DEPLOY_HOOK_URL'' -Method POST"'
-            }
-        }
-
-        stage('Run Container Test') {
-            steps {
-                bat '''
-                docker rm -f bank-backend
-                docker run -d -p 5001:5000 --name bank-backend %BACKEND_IMAGE%
-                '''
-            }
-        }
-
         stage('Build Report') {
             steps {
                 bat '''
@@ -104,7 +82,7 @@ pipeline {
             archiveArtifacts artifacts: 'build-report.txt', fingerprint: true
         }
         success {
-            echo 'CI/CD Pipeline completed successfully'
+            echo 'Pipeline completed successfully'
         }
         failure {
             echo 'Pipeline failed'

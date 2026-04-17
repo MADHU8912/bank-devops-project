@@ -1,18 +1,23 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Bank site</title>
+  <meta charset="UTF-8">
+  <title>Bank App</title>
 </head>
 <body>
   <h1>Bank Dashboard</h1>
   <button onclick="loadAccounts()">Load Accounts</button>
-  <pre id="output"></pre>
+  <pre id="output">Click button to load data</pre>
 
   <script>
     async function loadAccounts() {
-      const res = await fetch("http://localhost:5000/api/accounts");
-      const data = await res.json();
-      document.getElementById("output").textContent = JSON.stringify(data, null, 2);
+      try {
+        const res = await fetch("http://localhost:5000/api/accounts");
+        const data = await res.json();
+        document.getElementById("output").textContent = JSON.stringify(data, null, 2);
+      } catch (err) {
+        document.getElementById("output").textContent = "Error loading accounts";
+      }
     }
   </script>
 </body>
