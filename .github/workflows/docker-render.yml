@@ -1,4 +1,4 @@
-name: Full CI CD with Docker Pull and Render Deploy
+name: Docker Build Push Pull and Render Deploy
 
 on:
   push:
@@ -21,27 +21,14 @@ jobs:
       - name: Build Backend Image
         run: docker build -t nikhilabba12/bank-backend:latest ./backend
 
-      - name: Build Frontend Image
-        run: docker build -t nikhilabba12/bank-frontend:latest ./frontend
-
       - name: Push Backend Image
         run: docker push nikhilabba12/bank-backend:latest
 
-      - name: Push Frontend Image
-        run: docker push nikhilabba12/bank-frontend:latest
-
-      - name: Remove Local Images
-        run: |
-          docker rmi nikhilabba12/bank-backend:latest || true
-          docker rmi nikhilabba12/bank-frontend:latest || true
+      - name: Remove Local Backend Image
+        run: docker rmi nikhilabba12/bank-backend:latest || true
 
       - name: Docker Pull Test
-        run: |
-          docker pull nikhilabba12/bank-backend:latest
-          docker pull nikhilabba12/bank-frontend:latest
+        run: docker pull nikhilabba12/bank-backend:latest
 
-      - name: Trigger Render Backend Deploy
-        run: curl -X POST "${{ secrets.RENDER_BACKEND_DEPLOY_HOOK }}"
-
-      - name: Trigger Render Frontend Deploy
-        run: curl -X POST "${{ secrets.RENDER_FRONTEND_DEPLOY_HOOK }}"
+      - name: Trigger Render Deploy
+        run: curl -X POST "${{ secrets.RENDER_DEPLOY_HOOK_URL }}"

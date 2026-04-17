@@ -7,6 +7,7 @@ pipeline {
     }
 
     stages {
+
         stage('Checkout') {
             steps {
                 checkout scm
@@ -35,7 +36,11 @@ pipeline {
 
         stage('Docker Login') {
             steps {
-                withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                withCredentials([usernamePassword(
+                    credentialsId: 'dockerhub-creds',
+                    usernameVariable: 'DOCKER_USER',
+                    passwordVariable: 'DOCKER_PASS'
+                )]) {
                     bat 'echo %DOCKER_PASS% | docker login -u %DOCKER_USER% --password-stdin'
                 }
             }
@@ -60,12 +65,35 @@ pipeline {
             }
         }
 
+        stage('Trigger Render Backend Deploy') {
+            steps {
+                bat 'curl -X POST "YOUR_BACKEND_RENDER_DEPLOY_HOOK_URL"'
+            }
+        }
+
+        stage('Trigger Render Frontend Deploy') {
+            steps {
+                bat 'curl -X POST "YOUR_FRONTEND_RENDER_DEPLOY_HOOK_URL"'
+            }
+        }
+
+        stage('Run Container Test (Optional)') {
+            steps {
+                bat '''
+                docker rm -f bank-backend || true
+                docker run -d -p 5000:5000 --name bank-backend %BACKEND_IMAGE%
+                '''
+            }
+        }
+
         stage('Build Report') {
             steps {
                 bat '''
-                echo Build Successful > build-report.txt
+                echo ============================ > build-report.txt
+                echo BUILD SUCCESSFUL >> build-report.txt
                 echo Backend Image: %BACKEND_IMAGE% >> build-report.txt
                 echo Frontend Image: %FRONTEND_IMAGE% >> build-report.txt
+                echo ============================ >> build-report.txt
                 '''
             }
         }
@@ -76,7 +104,7 @@ pipeline {
             archiveArtifacts artifacts: 'build-report.txt', fingerprint: true
         }
         success {
-            echo 'Pipeline completed successfully'
+            echo 'CI/CD Pipeline completed successfully'
         }
         failure {
             echo 'Pipeline failed'
