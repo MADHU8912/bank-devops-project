@@ -53,7 +53,7 @@ pipeline {
             }
         }
 
-        stage('Pull Images Test') {
+        stage('Docker Pull Test') {
             steps {
                 bat 'docker pull %BACKEND_IMAGE%'
                 bat 'docker pull %FRONTEND_IMAGE%'
