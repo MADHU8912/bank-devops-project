@@ -67,21 +67,21 @@ pipeline {
 
         stage('Trigger Render Backend Deploy') {
             steps {
-                bat 'curl -X POST "YOUR_BACKEND_RENDER_DEPLOY_HOOK_URL"'
+                bat 'powershell -Command "Invoke-WebRequest -Uri ''YOUR_BACKEND_RENDER_DEPLOY_HOOK_URL'' -Method POST"'
             }
         }
 
         stage('Trigger Render Frontend Deploy') {
             steps {
-                bat 'curl -X POST "YOUR_FRONTEND_RENDER_DEPLOY_HOOK_URL"'
+                bat 'powershell -Command "Invoke-WebRequest -Uri ''YOUR_FRONTEND_RENDER_DEPLOY_HOOK_URL'' -Method POST"'
             }
         }
 
-        stage('Run Container Test (Optional)') {
+        stage('Run Container Test') {
             steps {
                 bat '''
-                docker rm -f bank-backend || true
-                docker run -d -p 5000:5000 --name bank-backend %BACKEND_IMAGE%
+                docker rm -f bank-backend
+                docker run -d -p 5001:5000 --name bank-backend %BACKEND_IMAGE%
                 '''
             }
         }
